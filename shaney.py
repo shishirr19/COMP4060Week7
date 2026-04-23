@@ -15,7 +15,6 @@ def build(contexts, words, n):
 def generate(f, starters, contexts):
 	context = random.choice(starters)
 
-	# paragraph formatting control
 	word_count = 0
 	paragraph_size = 50
 
@@ -77,7 +76,11 @@ def main():
 	out_file = "output.txt"
 	print("Writing " + out_file)
 	f = open(out_file, "w", encoding="utf-8")
-	generate(f, starters, contexts)
+
+	for _ in starters:
+		generate(f, starters, contexts)
+		f.write("\n")
+
 	f.close()
 
 if __name__ == '__main__':
