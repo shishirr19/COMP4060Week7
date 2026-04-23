@@ -3,10 +3,6 @@ import os, sys, string, random
 
 # Markov chain word generator.
 
-# Map each context to {word->frequency}.
-# 'contexts' is a frequency table, populated here.
-# 'words' is an ordered list of words.
-# 'n' is the number of words in each context window.
 def build(contexts, words, n):
 	context = words[:n]
 	for word in words[n:]:
@@ -14,53 +10,60 @@ def build(contexts, words, n):
 		wordfreq = contexts.get(key, {})
 		wordfreq[word] = wordfreq.get(word, 0) + 1
 		contexts[key] = wordfreq
-		# print(key, word, wordfreq[word])
 		context = context[1:] + [word]
 		
-# Generate semi-random output.
-# Print a random starting point and continue from there.
-# 'starters' is a list of possible starter contexts.
 def generate(f, starters, contexts):
 	context = random.choice(starters)
-	f.write(" ".join(context))
+
+	# paragraph formatting control
+	word_count = 0
+	paragraph_size = 50
+
+	f.write(" ".join(context).upper())
+	word_count += len(context)
+
 	while True:
 		key = tuple(context)
 		wordfreq = contexts.get(key, {})
 		if not wordfreq:
-				break
-		word = choose(wordfreq)
+			break
+
+		word = choose(wordfreq).upper()
 		f.write(" " + word)
-		context = context[1:] + [word]
+		word_count += 1
+
+		if word_count >= paragraph_size:
+			f.write("\n\n")
+			word_count = 0
+
+		context = context[1:] + [word.lower()]
+
 	f.write("\n")
 
-# Randomly choose one word from a {word->frequency}
-# dictionary, the choice being weighted by frequency.
 def choose(wordfreq):
-	# Calculate the total instances.
 	total = 0
-	for w,count in wordfreq.items():
-			total += count
-	# Choose a random instance.
-	chosen = random.randint(1,total)
-	# Walk through to find it.
+	for w, count in wordfreq.items():
+		total += count
+
+	chosen = random.randint(1, total)
+
 	sofar = 0
-	for word,count in wordfreq.items():
+	for word, count in wordfreq.items():
 		sofar += count
 		if chosen <= sofar:
 			return word
+
 	assert(0)
 
-# Generate a semi-random sequence of words that
-# mimic the probabilities of the input text.
 def main():
-	# Initialise.
 	data_dir = "data/"
 	n = 2
 	for arg in sys.argv[1:]:
-		if arg.isnumeric(): n = int(arg)
-		else: data_dir = arg
+		if arg.isnumeric(): 
+			n = int(arg)
+		else: 
+			data_dir = arg
 
-	# Build the frequency table by reading the input text(s).
 	contexts = {}
 	starters = []
 
@@ -71,13 +74,11 @@ def main():
 		starters.append(words[:2])
 		build(contexts, words, 2)
 
-	# Print words at random, starting at some initial context.
 	out_file = "output.txt"
 	print("Writing " + out_file)
-	f = open(out_file, "w")
+	f = open(out_file, "w", encoding="utf-8")
 	generate(f, starters, contexts)
 	f.close()
 
 if __name__ == '__main__':
 	main()
-
